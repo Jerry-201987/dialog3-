@@ -1,0 +1,33 @@
+{
+  "code": "0000",
+  "message": "成功",
+  "data": [
+    {
+      "name": "白色组",
+      "size": "180/92A",
+      "basicType": "37",
+      "waistline": "94",
+      "outseam": "105",
+      "hipline": "123",
+      "bottoms": "15"
+    },
+    {
+      "name": "深橄榄绿",
+      "size": "180/88A",
+      "basicType": "36",
+      "waistline": "91",
+      "outseam": "104",
+      "hipline": "117",
+      "bottoms": "17"
+    },
+    {
+      "name": "影黑",
+      "size": "180/88A",
+      "basicType": "36",
+      "waistline": "91",
+      "outseam": "",
+      "hipline": "117",
+      "bottoms": "18"
+    }
+  ]
+}
