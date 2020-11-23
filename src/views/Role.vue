@@ -7,9 +7,9 @@
               type="warning"
               icon="el-icon-setting"
               size="mini"
-              @click="showSetRightDialog(scope.row)"
+              @click="showSetRightDialog"
             >分配权限</el-button>
-    <add-role-dialog :isShow.sync="showAddDialog" />
+    <add-role-dialog :isShow.sync="showAddDialog" @getList="getList" />
     <edit-role-dialog :isShow.sync="showEditDialog" />
     <!-- <div v-for="(item,index) in list" :key="index">{{item.name}}--{{item.nickname}}--{{item.yearName}}</div> -->
     <el-table :data="list">
@@ -23,6 +23,8 @@
       <el-table-column prop="hipline" label="臀围"></el-table-column>
       <el-table-column prop="bottoms" label="脚口"></el-table-column>
     </el-table>
+    <p>FullName: {{fullname}}</p>
+    <p>FirstName: <input type="text" v-model="nickname"></p>
     <el-tree
         :data="rightsList"
         :props="treeProps"
@@ -30,16 +32,24 @@
         show-checkbox
         node-key="id"
         default-expand-all
-        :default-checked-keys="defKeys"
       ></el-tree>
   </div>
 </template>
 
 <script>
+import { mapState } from 'vuex'
 import addRoleDialog from "./add-role-dialog";
 import editRoleDialog from "./edit-role-dialog";
 import { getList,showSetRightDialog } from '../api/role/role'
 export default {
+  computed: {
+    ...mapState(['nickname','lastname','fullname'])
+  },
+  watch: {
+    nickname(newVal,oldVal){
+      this.fullname = newVal+''+this.lastname
+    }
+  },
   name: "Role",
   components: {
     addRoleDialog,
@@ -47,6 +57,7 @@ export default {
   },
   data() {
     return {
+      defaultMsg: '初始值',
       showAddDialog: false,
       showEditDialog: false,
       list: [
@@ -58,7 +69,9 @@ export default {
         // {prop:'hipline',label:'臀围'},
         // {prop:'bottoms',label:'脚口'},
         ],
-      flag: true
+      flag: true,
+      rightsList: [],
+      treeProps: {children: 'children',label: 'authName'}
     };
   },
   methods: {
@@ -70,23 +83,20 @@ export default {
     },
     async getList() {
       const { data: res } = await getList()
-      this.list = res.data   
+      this.list = res.data
     },
      // 分配权限
-    async showSetRightDialog (role) {
+    async showSetRightDialog(role) {
       this.roleId = role.id
       // 获取角色的所有权限
-      const { data: res } = await this.$http.get('rights/tree')
-      if (res.meta.status !== 200) {
-        return this.$message.error('获取权限数据失败！')
-      }
+      const { data: res } = await showSetRightDialog()
       //   获取权限树
       this.rightsList = res.data
-      //   console.log(res)
-      //   递归获取三级节点的id
-      this.getLeafkeys(role, this.defKeys)
+    //   //   console.log(res)
+    //   //   递归获取三级节点的id
+    //   this.getLeafkeys(role, this.defKeys)
 
-      this.setRightDialogVisible = true
+    //   this.setRightDialogVisible = true
     },
     // 通过递归 获取角色下三级权限的 id, 并保存到defKeys数组
     getLeafkeys (node, arr) {
@@ -95,13 +105,9 @@ export default {
         return arr.push(node.id)
       }
       node.children.forEach(item => this.getLeafkeys(item, arr))
-    },
-    // 权限对话框关闭事件
-    setRightDialogClosed () {
-      this.defKeys = []
     }
-  },
-};
+  }
+}
 </script>
 
 <style scoped>
