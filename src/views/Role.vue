@@ -25,12 +25,19 @@
     </el-table>
     <p>FullName: {{fullname}}</p>
     <p>FirstName: <input type="text" v-model="nickname"></p>
+    <p>FullName:{{lastname+'666'+nicknameQ}}</p>
+    <p>FirstName:<input type="text" v-model="nicknameQ"></p>
+    <p>{{obj.a}}</p>
+    <input type="text" v-model="obj.a">
+    <p>{{obj.b}}</p>
+    <input type="text" v-model="obj.b">
+    <button @click="testClick" ref="aa">{{testMsg}}</button>
     <el-tree
         :data="rightsList"
         :props="treeProps"
         ref="treeRef"
         show-checkbox
-        node-key="id"
+        node-key="id" 
         default-expand-all
       ></el-tree>
   </div>
@@ -48,7 +55,33 @@ export default {
   watch: {
     nickname(newVal,oldVal){
       this.fullname = newVal+''+this.lastname
-    }
+    },
+    lastname: {
+      handler(newVal, oldVal) {
+        this.nicknameQ = newVal;
+      }
+    },
+    // lastname(newVal,oldVal){
+    //   this.nicknameQ = newVal
+    // },
+    obj:{    
+      handler(newVal,oldVal){
+        // if(newVal.obj||newVal.obj!=oldVal.obj){
+        //   console.log(222);
+        // }else{
+          console.log(333)
+        // }
+      },
+      immediate:true,
+      deep:true
+    },
+    'obj.b'(newVal,oldVal){
+      if (newVal||newVal!=oldVal) {
+        console.log(666);
+      } else {
+        console.log(888);
+      }
+    },
   },
   name: "Role",
   components: {
@@ -57,6 +90,11 @@ export default {
   },
   data() {
     return {
+      obj:{
+        a:'奎因',
+        b:'盖伦'
+      },
+      testMsg: '原始值',
       defaultMsg: '初始值',
       showAddDialog: false,
       showEditDialog: false,
