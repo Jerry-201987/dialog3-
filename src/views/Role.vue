@@ -149,4 +149,8 @@ export default {
 </script>
 
 <style scoped>
+  .btn-wrap {
+    display: flex;
+    justify-content: center;
+  }
 </style>
