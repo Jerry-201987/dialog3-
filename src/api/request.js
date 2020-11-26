@@ -1,10 +1,10 @@
 import axios from "axios";
-const service = axios.create();
-service.interceptors.request.use(
+const request = axios.create();
+request.interceptors.request.use(
   (value) => value,
   (error) => error
 );
-service.interceptors.response.use(
+request.interceptors.response.use(
   (value) => {
     if (value.meta.status !== 200 || value.code !== "0000") {
       return Promise.reject(value?.meta?.msg || "未知错误");
@@ -13,7 +13,7 @@ service.interceptors.response.use(
   },
   (error) => error
 );
-export default service;
+export default request;
 ------------------------------------------------------------------------------------------------------------
 import axios from 'axios'
 
