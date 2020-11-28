@@ -4,11 +4,12 @@
     <el-button @click="editRole">修改角色</el-button>
     <el-button @click="getList">获取列表</el-button>
     <el-button
-              type="warning"
-              icon="el-icon-setting"
-              size="mini"
-              @click="showSetRightDialog"
-            >分配权限</el-button>
+      type="warning"
+      icon="el-icon-setting"
+      size="mini"
+      @click="showSetRightDialog"
+      >分配权限</el-button
+    >
     <add-role-dialog :isShow.sync="showAddDialog" @getList="getList" />
     <edit-role-dialog :isShow.sync="showEditDialog" />
     <!-- <div v-for="(item,index) in list" :key="index">{{item.name}}--{{item.nickname}}--{{item.yearName}}</div> -->
@@ -23,44 +24,44 @@
       <el-table-column prop="hipline" label="臀围"></el-table-column>
       <el-table-column prop="bottoms" label="脚口"></el-table-column>
     </el-table>
-    <p>FullName: {{fullname}}</p>
-    <p>FirstName: <input type="text" v-model="nickname"></p>
-    <p>FullName:{{lastname+'666'+nicknameQ}}</p>
-    <p>FirstName:<input type="text" v-model="nicknameQ"></p>
+    <p>FullName: {{ fullname }}</p>
+    <p>FirstName: <input type="text" v-model="nickname" /></p>
+    <!-- <p>FullName:{{lastname+'666'+nicknameQ}}</p>
+    <p>FirstName:<input type="text" v-model="nicknameQ"></p> -->
     <p>{{obj.a}}</p>
     <input type="text" v-model="obj.a">
     <p>{{obj.b}}</p>
     <input type="text" v-model="obj.b">
-    <button @click="testClick" ref="aa">{{testMsg}}</button>
+    <button @click="testClick" ref="aa">{{defaultMsg}}</button>
     <el-tree
-        :data="rightsList"
-        :props="treeProps"
-        ref="treeRef"
-        show-checkbox
-        node-key="id" 
-        default-expand-all
-      ></el-tree>
+      :data="rightsList"
+      :props="treeProps"
+      ref="treeRef"
+      show-checkbox
+      node-key="id"
+      default-expand-all
+    ></el-tree>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex'
+import { mapState } from "vuex";
 import addRoleDialog from "./add-role-dialog";
 import editRoleDialog from "./edit-role-dialog";
-import { getList,showSetRightDialog } from '../api/role/role'
+import { getList, showSetRightDialog } from "../api/role/role";
 export default {
   computed: {
-    ...mapState(['nickname','lastname','fullname'])
+    ...mapState(["nickname", "lastname", "fullname"]),
   },
   watch: {
-    nickname(newVal,oldVal){
-      this.fullname = newVal+''+this.lastname
-    },
-    lastname: {
-      handler(newVal, oldVal) {
-        this.nicknameQ = newVal;
-      }
-    },
+    // nickname(newVal, oldVal) {
+    //   this.fullname = newVal + "" + this.lastname;
+    // },
+    // lastname: {
+    //   handler(newVal, oldVal) {
+    //     this.nicknameQ = newVal;
+    //   }
+    // },
     // lastname(newVal,oldVal){
     //   this.nicknameQ = newVal
     // },
@@ -94,8 +95,7 @@ export default {
         a:'奎因',
         b:'盖伦'
       },
-      testMsg: '原始值',
-      defaultMsg: '初始值',
+      defaultMsg: "初始值",
       showAddDialog: false,
       showEditDialog: false,
       list: [
@@ -106,10 +106,10 @@ export default {
         // {prop:'outseam',label:'裤长'},
         // {prop:'hipline',label:'臀围'},
         // {prop:'bottoms',label:'脚口'},
-        ],
-      flag: true,
+      ],
+      // flag: true,
       rightsList: [],
-      treeProps: {children: 'children',label: 'authName'}
+      treeProps: { children: "children", label: "privilegeName" },
     };
   },
   methods: {
@@ -120,37 +120,67 @@ export default {
       this.showEditDialog = true;
     },
     async getList() {
-      const { data: res } = await getList()
-      this.list = res.data
+      // this.showAddDialog = flag; //lau
+      // console.log(flag) //lau
+      const { data: res } = await getList();
+      this.list = res.data;
     },
-     // 分配权限
+    // 分配权限
     async showSetRightDialog(role) {
-      this.roleId = role.id
+      this.roleId = role.id;
       // 获取角色的所有权限
-      const { data: res } = await showSetRightDialog()
-      //   获取权限树
-      this.rightsList = res.data
-    //   //   console.log(res)
-    //   //   递归获取三级节点的id
-    //   this.getLeafkeys(role, this.defKeys)
+      const { data: res } = await showSetRightDialog();
+      // let arrA = [];
+      // res.data.forEach((item, index) => {
+      //   if (item.parentId === "-1") {
+      //     arrA.push(item);
+      //     arrA.forEach((aItem, aIndex) => {
+      //       let arrB = [];
+      //       res.data.forEach((bItem, bIndex) => {
+      //         if (aItem.objectId === bItem.parentId) {
+      //           arrB.push(bItem);
+      //           arrB.forEach((bItem, bIndex) => {
+      //             let arrC = [];
+      //             res.data.forEach((cItem, cIndex) => {
+      //               if (bItem.objectId === cItem.parentId) {
+      //                 arrC.push(cItem);
+      //               }
+      //             });
+      //             bItem.children = arrC;
+      //           });
+      //         }
+      //       });
+      //       aItem.children = arrB;
+      //     });
+      //   }
+      // });
+      // console.log(arrA)
 
-    //   this.setRightDialogVisible = true
+      let arrA = res.data.filter((r) => r.parentId === '-1');
+      arrA.forEach((r) => {
+        r.children = res.data.filter((rr) => rr.parentId === r.objectId);
+      });
+      console.log(arrA);
+
+      //   获取权限树
+      this.rightsList = arrA;
+      //   //   console.log(res)
+      //   //   递归获取三级节点的id
+      //   this.getLeafkeys(role, this.defKeys)
+
+      //   this.setRightDialogVisible = true
     },
     // 通过递归 获取角色下三级权限的 id, 并保存到defKeys数组
-    getLeafkeys (node, arr) {
-      // 没有children属性，则是三级节点
-      if (!node.children) {
-        return arr.push(node.id)
-      }
-      node.children.forEach(item => this.getLeafkeys(item, arr))
-    }
-  }
-}
+    // getLeafkeys(node, arr) {
+    //   // 没有children属性，则是三级节点
+    //   if (!node.children) {
+    //     return arr.push(node.id);
+    //   }
+    //   node.children.forEach((item) => this.getLeafkeys(item, arr));
+    // },
+  },
+};
 </script>
 
 <style scoped>
-  .btn-wrap {
-    display: flex;
-    justify-content: center;
-  }
 </style>
