@@ -32,7 +32,7 @@
     <input type="text" v-model="obj.a">
     <p>{{obj.b}}</p>
     <input type="text" v-model="obj.b">
-    <button @click="testClick" ref="aa">{{defaultMsg}}</button>
+    <button @click="testClick" ref="aa">{{testMsg}}</button>
     <el-tree
       :data="rightsList"
       :props="treeProps"
@@ -95,7 +95,7 @@ export default {
         a:'奎因',
         b:'盖伦'
       },
-      defaultMsg: "初始值",
+      testMsg: "初始值",
       showAddDialog: false,
       showEditDialog: false,
       list: [
@@ -113,6 +113,14 @@ export default {
     };
   },
   methods: {
+    testClick() {
+      let that = this
+      that.testMsg='修改后的值'
+      that.$nextTick(function(){
+        that.testMsg='后起之秀'
+        // that.$refs.aa.innerHTML='后起之秀'
+      })
+    },
     addRole() {
       this.showAddDialog = true;
     },
