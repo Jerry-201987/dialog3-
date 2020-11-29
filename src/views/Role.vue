@@ -134,8 +134,7 @@ export default {
       this.list = res.data;
     },
     // 分配权限
-    async showSetRightDialog(role) {
-      this.roleId = role.id;
+    async showSetRightDialog() {
       // 获取角色的所有权限
       const { data: res } = await showSetRightDialog();
       // let arrA = [];
