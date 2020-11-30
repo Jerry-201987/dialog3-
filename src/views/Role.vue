@@ -137,18 +137,22 @@ export default {
     async showSetRightDialog() {
       // 获取角色的所有权限
       const { data: res } = await showSetRightDialog();
-      // let arrA = [];
-      // res.data.forEach((item, index) => {
-      //   if (item.parentId === "-1") {
+      // let arrA = []
+      // let arr = resp.data.map(v => {
+      //   return v.privilegeLevel
+      // })
+      // let mainLevel = Math.min(...arr)
+      // resp.data.forEach((item,index)=>{
+      //   if (item.privilegeLevel === mainLevel) {
       //     arrA.push(item);
       //     arrA.forEach((aItem, aIndex) => {
       //       let arrB = [];
-      //       res.data.forEach((bItem, bIndex) => {
+      //       resp.data.forEach((bItem, bIndex) => {
       //         if (aItem.objectId === bItem.parentId) {
       //           arrB.push(bItem);
       //           arrB.forEach((bItem, bIndex) => {
       //             let arrC = [];
-      //             res.data.forEach((cItem, cIndex) => {
+      //             resp.data.forEach((cItem, cIndex) => {
       //               if (bItem.objectId === cItem.parentId) {
       //                 arrC.push(cItem);
       //               }
