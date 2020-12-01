@@ -288,3 +288,191 @@ export default {
   }
 }
 </style>
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<template>
+  <dialog-box title="修改密码"
+              class="editDialog-eded0d"
+              width="480px"
+              :visible.sync="visible"
+              :sure-disable="loading"
+              @close="hideDialog"
+              @submit="submit"
+              @cancel="hideDialog">
+    <el-form ref="eidtForm"
+             v-loading="loading"
+             class="edit-dialog-form"
+             :rules="editRules"
+             :model="editForms"
+             label-width="90px">
+      <el-form-item label="账户名称"
+                    prop="username">
+        <div style="text-align: left">
+          {{ editForms.username }}
+        </div>
+      </el-form-item>
+      <el-form-item label="当前密码"
+                    prop="password">
+        <el-input v-model="editForms.password"
+                  type="password"
+                  placeholder="请输入当前密码" />
+      </el-form-item>
+      <el-form-item label="新密码"
+                    prop="newpassword">
+        <el-input v-model="editForms.newpassword"
+                  type="password"
+                  placeholder="请输入新密码" />
+      </el-form-item>
+      <el-form-item label="确认密码"
+                    prop="rePassword">
+        <el-input v-model="editForms.rePassword"
+                  type="password"
+                  placeholder="请确认密码" />
+      </el-form-item>
+    </el-form>
+  </dialog-box>
+</template>
+<script>
+import { checkStrongPassword } from '_utils/validate'
+import { handleModifyAdminPwd } from '@/api/user-manage'
+import DialogBox from '@/components/dialog-box'
+export default {
+  name: 'MopassDialog',
+  components: { DialogBox },
+  props: {
+    isShow: {
+      require: true,
+      type: Boolean,
+      default: false
+    },
+    details: {
+      type: Object,
+      default: () => {
+        return {}
+      }
+    }
+  },
+
+  data() {
+    const validatePass1 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请输入新密码'))
+      } else if (!checkStrongPassword(value)) {
+        // callback(new Error('口令必须包含数字,大小写字母,特殊字符中的2种组合,且长度不低于8位'))
+        callback(new Error('密码过于简单'))
+      } else {
+        callback()
+      }
+    }
+    const validatePass2 = (rule, value, callback) => {
+      if (value === '') {
+        callback(new Error('请确认密码'))
+      } else if (value !== this.editForms.newpassword) {
+        callback(new Error('两次输入密码不一致!'))
+      } else {
+        callback()
+      }
+    }
+    return {
+      visible: false,
+      loading: false,
+      editForms: {
+        username: '',
+        password: '',
+        newpassword: '',
+        rePassword: ''
+      },
+      editRules: {
+        // username: [{ required: true, message: '请输入账户名称', trigger: 'blur' }],
+        password: [{ required: true, message: '请输入当前密码', trigger: 'blur' }],
+        newpassword: [{ required: true, validator: validatePass1, trigger: 'blur' }],
+        rePassword: [{ required: true, validator: validatePass2, trigger: 'blur' }]
+      }
+    }
+  },
+  watch: {
+    isShow() {
+      console.log(this.isShow)
+      this.visible = this.isShow
+      if (this.visible) {
+        this.editForms = Object.assign(this.editForms, this.details)
+      }
+    }
+  },
+
+  methods: {
+    hideDialog(data) {
+      // 关闭弹窗
+      this.visible = false
+      this.$emit('hide', data)
+      setTimeout(() => {
+        // 重置value
+        this.$refs.eidtForm.resetFields()
+      }, 300)
+    },
+    // 点击确定
+    submit() {
+      this.$refs.eidtForm.validate(valid => {
+        //  校验不通过
+        if (!valid) return
+
+        // 校验通过，提交保存
+        this.loading = true
+        // 提交修改
+        handleModifyAdminPwd({
+          oldPassword: this.editForms.password,
+          newPassword: this.editForms.rePassword
+        })
+          .then(() => {
+            this.$message({
+              type: 'success',
+              message: '密码修改成功!'
+            })
+            this.$emit('success')
+            this.$router.replace({ name: 'login' })
+          })
+          .catch(({ code }) => {
+            // 密码修改失败
+            if (code === 'USER-800002') {
+              this.$message.error('输入密码错误次数太多，请重新登录')
+              this.$router.replace({ name: 'login' })
+            } else if (code === 'PUB-600011') {
+              this.$message.error('密码强度不够')
+            } else if (code === 'PUB-800001') {
+              this.$message.error('原密码不正确')
+            } else if (code === 'USER_800007') {
+              this.$message.error('密码不可以与用户名或者用户名的逆序相同')
+            } else if (code === 'USER-800008') {
+              this.$message.error('密码不可以与最近使用密码相同')
+            } else if (code === 'USER_800006') {
+              this.$message.error('修改密码过于频繁，请稍后再试')
+            } else {
+              this.$message({
+                type: 'error',
+                message: '密码修改失败!'
+              })
+            }
+          })
+          .finally(() => {
+            this.loading = false
+          })
+      })
+    }
+  }
+}
+</script>
+<style lang="less">
+.editDialog-eded0d {
+  .el-dialog__footer {
+    text-align: center;
+  }
+  .w_360 {
+    width: 360px;
+  }
+  .edit-dialog-form {
+    padding: 20px;
+    .el-select {
+      width: 100%;
+    }
+  }
+}
+</style>
