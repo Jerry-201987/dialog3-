@@ -1,7 +1,14 @@
 <template>
-  <div :style="{ display: isShow ? 'block' : 'none' }">
-    <h5>新增角色</h5>
-    <dialog-box :dialogVisible="isShow" @close="close" />
+  <div>
+    <!-- <h5>新增角色</h5> -->
+    <div :class="isShow?'el-icon-arrow-up':'el-icon-arrow-down'"></div>
+    <dialog-box :dialogVisible="isShow" title="新增角色" width="1000px" @close="close">
+      <template v-slot:content>
+        <el-button @click="closeAddRole">关闭新增角色</el-button>
+        <el-input v-model="email" placeholder="请输入邮箱"/>
+        <el-button @click="emailChange">{{emails}}</el-button>
+      </template>
+    </dialog-box>
   </div>
 </template>
 
@@ -10,15 +17,44 @@ import dialogBox from "~/dialog-box";
 export default {
   name: "addRoleDialog",
   components: { dialogBox },
-  props: { isShow: { required: true, type: Boolean, default: false } },
+  props: { 
+    isShow: { required: true, type: Boolean, default: false },
+    details: { type: Object, default: ()=>{return {}} } 
+    },
   data() {
-    return {};
+    return {
+      visible: false,
+      email: '123@sina.cn',
+      emails: ''
+    };
   },
   methods: {
     close() {
-      this.$emit('update:isShow', false)
+      this.$emit("update:isShow", false);
+      this.email = '123@sina.cn'
+    },
+    closeAddRole() {
+      this.$emit("update:isShow", false);
+      this.email = '123@sina.cn'
+    },
+    emailChange() {
+      if (this.emails !== this.email) {
+        this.emails = this.email
+      } else {
+        this.emails = '置空'
+        this.email = ''
+      }
     }
   },
+  watch: {
+    isShow() {
+      this.visible = this.isShow
+      if (this.visible) {
+        this.emails = this.email
+        // this.emails = this.details.email
+    }
+    }
+  }
 };
 </script>
 
