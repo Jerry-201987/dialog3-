@@ -1216,3 +1216,367 @@ export default {
   }
 }
 </style>
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+<template>
+  <div v-loading="isLoading" class="role-manage">
+    <page-out>
+      <template v-slot:header>角色管理</template>
+      <template v-slot:condition>
+        <div class="search-box">
+          <span class="search-label">角色名称</span>
+          <el-input class="search-input" v-model.trim="roleModel.roleName" maxlength="128" show-word-limit clearable placeholder="请输入角色名称" @keyup.enter.native="searchRole"/>
+            <el-button class="search-button" :disabled="loading" type="primary" @click="searchRole">
+              查询
+            </el-button>
+            <el-button v-permission="['addrole']" class="add-button" type="primary" @click="roleAddAction">
+              新增角色
+            </el-button>
+        </div>
+      </template>
+      <template v-slot:content>
+        <div v-loading="loading" class="user-list">
+          <table-config :columns="columns" :data="roleList" :row-style="{height:'52px'}" />
+        </div>
+        <div class="page-handle">
+          <el-pagination
+            :current-page="pageIndex"
+            :page-size="pageSize"
+            :page-sizes="[10, 20]"
+            :total="total"
+            background
+            layout="total, sizes, prev, pager, next, jumper"
+            @current-change="pageIndexChange"
+            @size-change="pageSizeChange"
+          />
+        </div>
+        <edit-role-dialog :isShow.sync="showEditDialog" @searchRole="searchRole"/>
+        <role-maintenance :isShow.sync="showAddDialog" @searchRole="searchRole"/>
+        <message-box
+          :visible.sync="isShowDeleteConfirmDialog"
+          level="error"
+          title="提示"
+          width="502px"
+          @confirm="confirmDeleteHandler"
+        >
+        <div class="del-content">
+          <p>确定删除{{currentRowData.roleName}}？角色删除后无法恢复！</p>
+        </div>
+        </message-box>
+      </template>
+    </page-out>
+  </div>
+</template>
+<script>
+import { mapState, mapActions } from 'vuex'
+import { qryRoleDetail } from '@/api/role-manage.js'
+import PageOut from '@/components/page-out'
+import TableConfig from '@/components/table-config'
+import MessageBox from '@/components/message-box'
+import RoleMaintenance from "./role-maintenance.vue";
+import EditRoleDialog from "./edit-role-dialog.vue";
+export default {
+  name: 'RoleManage',
+  components: {
+    RoleMaintenance,
+    EditRoleDialog,
+    MessageBox,
+    PageOut,
+    TableConfig
+  },
+  data() {
+    return {
+      loading: false,
+      isShowDeleteConfirmDialog: false, //  删除确认弹框显示信号
+      showAddDialog: false,
+      showEditDialog: false,
+      pageIndex: 1,
+      pageSize: 10,
+      roleModel: {
+        // 角色模型数据
+        roleName: '',
+        roleLevel: ''
+      },
+      currentRowData: {},
+      columns: [
+        {
+          title: '序号',
+          key: 'num',
+          minWidth: '80',
+          render: (h, params) => {
+            return ++params.$index
+          }
+        },
+        {
+          title: '角色名称',
+          key: 'roleName',
+          minWidth: '90'
+        },
+        {
+          title: '角色级别',
+          key: 'roleLevel',
+          minWidth: '90',
+          render: (h, params) => {
+            return (
+              <div>{params.row.roleLevel}级</div>
+            )
+          }
+        },
+        {
+          title: '更新者',
+          key: 'updateUsername',
+          minWidth: '90'
+        },
+        {
+          title: '更新时间',
+          key: 'updateTime',
+          minWidth: '90'
+        },
+        {
+          title: '操作',
+          key: '',
+          minWidth: '90',
+          render: (h, params) => {
+            return (
+              <div class="table-operation">
+                {params.row.roleLevel!==1?(
+                  <i
+                  class="table-icon table-operation-icon-edit hw-blue"
+                  title="编辑角色"
+                  on-click={()=>this.roleEdit(params.row)}
+                  />
+                  ):(
+                  ""
+                  )}
+                {params.row.roleLevel!==1?(
+                  <i
+                  class="table-icon table-operation-icon-delete hw-blue"
+                  title="删除角色"
+                  on-click={()=>this.roleDel(params.row)}
+                  />
+                  ):(
+                  ""
+                  )}
+              </div>
+            )
+          }
+        }
+      ]
+    }
+  },
+  methods: {
+    ...mapActions('systemManage', ['getRoleList', 'deleteRole']),
+    // 检索角色清单数据
+    retrieveRoleList(flag = true) {
+      if (flag) this.pageIndex = 1
+      const params = {
+        roleName: this.roleModel.roleName,
+        pageIndex: this.pageIndex,
+        pageSize: this.pageSize
+      }
+      this.getRoleList(params)
+    },
+    // 查询点击事件
+    searchRole() {
+      this.pageIndex = 1
+      this.pageSize = 10
+      this.retrieveRoleList()
+    },
+    // 新增角色 点击事件
+    roleAddAction() {
+      // 清空角色数据模型
+      const roleModel = {
+        privilegeId: '',
+        privilegeName: '',
+        privilegeLevel: ''
+      }
+      sessionStorage.setItem('roleDetail', JSON.stringify(roleModel))
+      this.showAddDialog = true;
+    },
+    // 【编辑】角色
+    async roleEdit(item) {
+      // 将角色详情入写浏览器缓存
+      const res = await qryRoleDetail(item.roleId)
+      if (res && res.code === 'PUB-000000') {
+        sessionStorage.setItem('roleDetail', JSON.stringify(res.data))
+        this.showEditDialog = true;
+        this.currentRowData = item
+      } else {
+      }
+    },
+    // 预删除角色动作
+    roleDel(item) {
+      Object.assign(this.roleModel, { roleId: item.roleId })
+      this.isShowDeleteConfirmDialog = true
+      this.currentRowData = item
+    },
+    // 确认删除
+    async confirmDeleteHandler() {
+      const params = {
+        roleId: this.roleModel.roleId,
+        isDelRef: '0'
+      }
+      this.isShowDeleteConfirmDialog = false
+      await this.deleteRole(params)
+      this.searchRole()
+    },
+    // 页容量改变事件
+    pageSizeChange(size) {
+      this.pageSize = size
+      this.retrieveRoleList()
+    },
+    // 页码改变事件
+    pageIndexChange(index) {
+      this.pageIndex = index
+      this.retrieveRoleList(false)
+    },
+  },
+  created() {
+    // 检索列表
+    this.retrieveRoleList()
+  },
+  computed: {
+    // 获取角色总对象数据
+    ...mapState('systemManage', ['roleOption', 'isLoading']),
+    // 角色列表数据
+    roleList() {
+      let _roleList = []
+      if (this.roleOption.roleList && this.roleOption.roleList.length) {
+        _roleList = this.roleOption.roleList
+      }
+      return _roleList
+    },
+    // 角色级别数据集合
+    roleLevelList() {
+      let _roleLevelList = []
+      if (this.roleOption.roleLevelList && this.roleOption.roleLevelList.length) {
+        _roleLevelList = this.roleOption.roleLevelList
+      }
+      return _roleLevelList
+    },
+    // 角色总条目数
+    total() {
+      let numT = 0
+      numT = this.roleOption.total
+      return numT
+    }
+  }
+}
+</script>
+<style lang="less" scoped>
+.role-manage {
+  .search-box {
+    .search-label {
+      color: #606670;
+    }
+    .search-input {
+      width: 200px;
+      margin-left: 6px;
+      vertical-align: middle;
+      .el-input__suffix {
+        margin-top: -2px;
+      }
+    }
+    ::v-deep .el-input__inner {
+      height: 36px;
+      line-height: 36px;
+    }
+    .search-button {
+      margin-left: 16px;
+      height: 36px;
+      width: 80px;
+      vertical-align: middle;
+    }
+    .add-button {
+      float: right;
+      height: 36px;
+    }
+  }
+    .hw-blue {
+    color: #4a92fe;
+  }
+  .user-list {
+    height: 100%;
+  }
+
+  ::v-deep .el-table {
+    .status {
+      line-height: 20px;
+      i {
+        font-style: initial;
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        margin-left: 5px;
+      }
+      &.success {
+        i {
+          background-color: rgb(103, 220, 161);
+        }
+      }
+      &.error {
+        i {
+          background-color: rgba(red, 0.8);
+        }
+      }
+    }
+    .roleName {
+      &:not(:last-child) {
+        margin-right: 5px;
+      }
+      i {
+        margin: 0 2px;
+        font-style: initial;
+      }
+    }
+    .table-operation {
+      display: flex;
+      align-items: center;
+    }
+    .table-operation-icon {
+      cursor: pointer;
+      &:not(:last-child) {
+        margin-right: 8px;
+      }
+    }
+    .table-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      font-size: 16px;
+      color: #409eff;
+      background-size: contain;
+      cursor: pointer;
+      background-repeat: no-repeat;
+      &:not(:last-child) {
+        margin-right: 8px;
+      }
+      &.table-operation-icon-edit {
+        background-image: url("../../../assets/images/icons/icon-edit.png");
+      }
+      &.table-operation-icon-delete {
+        background-image: url("../../../assets/images/icons/icon-delete.png");
+      }
+      &.table-operation-icon-unlock {
+        background-image: url("../../../assets/images/icons/icon-unlock.png");
+      }
+      &.table-operation-icon-lock {
+        background-image: url("../../../assets/images/icons/icon-lock.png");
+      }
+      &.table-operation-icon-reset {
+        background-image: url("../../../assets/images/icons/icon-reset.png");
+      }
+    }
+  }
+  .del-content {
+    img {
+      margin: 12px 0;
+    }
+    p {
+      line-height: 50px;
+      font-size: 18px;
+    }
+    margin-bottom: 12px;
+  }
+}
+</style>
