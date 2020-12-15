@@ -5,6 +5,7 @@
       <el-button @click="editRole">修改角色</el-button>
       <el-button @click="getList">获取列表</el-button>
       <el-button type="warning" icon="el-icon-setting" size="mini" @click="showSetRightDialog">分配权限</el-button>
+      <el-button @click="save">确定</el-button>
     </div>
     <!-- <template v-if="showAddDialog"> -->
     <add-role-dialog :isShow.sync="showAddDialog" />
@@ -23,10 +24,11 @@
     <el-tree
       :data="rightsList"
       :props="treeProps"
-      ref="treeRef"
+      ref="tree"
       show-checkbox
-      node-key="id"
+      node-key="objectId"
       default-expand-all
+      @check="checkboxSelect"
     ></el-tree>
     <el-input class="elIpt" v-model="obj.username" @keyup.enter.native="addInformation" />
   </div>
@@ -79,7 +81,7 @@ export default {
       obj: {
         a: "奎因",
         b: "盖伦",
-        username: ''
+        username: ""
       },
       testMsg: "原始值",
       nicknameQ: "",
@@ -88,18 +90,19 @@ export default {
       list: [],
       rightsList: [],
       treeProps: { children: "children", label: "privilegeName" },
+      allIdArr: []
     };
   },
   methods: {
-    addInformation () {
+    addInformation() {
       if (this.obj.username.length > this.maxLength) {
         this.$message({
-          type: 'error',
-          message: '长度最大为5'
-        })
+          type: "error",
+          message: "长度最大为5"
+        });
       }
-      if (this.obj.username=== '苏打绿') {
-        this.showSetRightDialog()
+      if (this.obj.username === "苏打绿") {
+        this.showSetRightDialog();
       }
     },
     addRole() {
@@ -126,6 +129,14 @@ export default {
     async showSetRightDialog() {
       //   const { data: res }  = await showSetRightDialog()
       let data = [
+        {
+          objectId: "-1",
+          privilegeCode: "root",
+          privilegeId: "-1",
+          privilegeLevel: 5,
+          privilegeName: "根节点",
+          privilegeType: 1
+        },
         {
           objectId: "10000002",
           parentId: "701",
@@ -257,7 +268,7 @@ export default {
           parentId: "60103",
           privilegeCode: "phm6010301",
           privilegeId: "6010301",
-          privilegeLevel: 5,
+          privilegeLevel: 2,
           privilegeName: "桌面管理",
           privilegeType: 1
         },
@@ -685,78 +696,6 @@ export default {
           privilegeType: 1
         },
         {
-          objectId: "10105",
-          parentId: "101",
-          privilegeCode: "apiauthmgmt",
-          privilegeId: "10105",
-          privilegeLevel: 2,
-          privilegeName: "API认证凭据管理",
-          privilegeType: 1
-        },
-        {
-          objectId: "10104",
-          parentId: "101",
-          privilegeCode: "weakpwdmgmt",
-          privilegeId: "10104",
-          privilegeLevel: 2,
-          privilegeName: "弱口令管理",
-          privilegeType: 1
-        },
-        {
-          objectId: "removeloginlimit",
-          parentId: "10101",
-          privilegeCode: "removeloginlimit",
-          privilegeId: "1010109",
-          privilegeLevel: 2,
-          privilegeName: "解除用户登录延迟限制",
-          privilegeType: 2
-        },
-        {
-          objectId: "resetpwd",
-          parentId: "10101",
-          privilegeCode: "resetpwd",
-          privilegeId: "1010108",
-          privilegeLevel: 2,
-          privilegeName: "重置密码",
-          privilegeType: 2
-        },
-        {
-          objectId: "moduser",
-          parentId: "10101",
-          privilegeCode: "moduser",
-          privilegeId: "1010103",
-          privilegeLevel: 2,
-          privilegeName: "修改用户",
-          privilegeType: 2
-        },
-        {
-          objectId: "adduser",
-          parentId: "10101",
-          privilegeCode: "adduser",
-          privilegeId: "1010102",
-          privilegeLevel: 2,
-          privilegeName: "新增用户",
-          privilegeType: 2
-        },
-        {
-          objectId: "viewuser",
-          parentId: "10101",
-          privilegeCode: "viewuser",
-          privilegeId: "1010101",
-          privilegeLevel: 2,
-          privilegeName: "查看用户",
-          privilegeType: 2
-        },
-        {
-          objectId: "10101",
-          parentId: "101",
-          privilegeCode: "usermgmt",
-          privilegeId: "10101",
-          privilegeLevel: 2,
-          privilegeName: "用户管理",
-          privilegeType: 1
-        },
-        {
           objectId: "901",
           parentId: "-1",
           privilegeCode: "uc801",
@@ -829,85 +768,139 @@ export default {
           privilegeType: 1
         },
         {
-          objectId: "8010101",
-          parentId: "80101",
-          privilegeCode: "irs8010101",
-          privilegeId: "8010101",
+          objectId: "10105",
+          parentId: "101",
+          privilegeCode: "apiauthmgmt",
+          privilegeId: "10105",
           privilegeLevel: 2,
-          privilegeName: "看板",
+          privilegeName: "API认证凭据管理",
           privilegeType: 1
         },
         {
-          objectId: "8010904",
-          parentId: "80109",
-          privilegeCode: "irs8010904",
-          privilegeId: "8010904",
+          objectId: "10104",
+          parentId: "101",
+          privilegeCode: "weakpwdmgmt",
+          privilegeId: "10104",
           privilegeLevel: 2,
-          privilegeName: "系统监控",
+          privilegeName: "弱口令管理",
           privilegeType: 1
         },
         {
-          objectId: "8010903",
-          parentId: "80109",
-          privilegeCode: "irs8010903",
-          privilegeId: "8010903",
+          objectId: "removeloginlimit",
+          parentId: "10101",
+          privilegeCode: "removeloginlimit",
+          privilegeId: "1010109",
           privilegeLevel: 2,
-          privilegeName: "用户测试",
+          privilegeName: "解除用户登录延迟限制",
+          privilegeType: 2
+        },
+        {
+          objectId: "resetpwd",
+          parentId: "10101",
+          privilegeCode: "resetpwd",
+          privilegeId: "1010108",
+          privilegeLevel: 2,
+          privilegeName: "重置密码",
+          privilegeType: 2
+        },
+        {
+          objectId: "moduser",
+          parentId: "10101",
+          privilegeCode: "moduser",
+          privilegeId: "1010103",
+          privilegeLevel: 2,
+          privilegeName: "修改用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "adduser",
+          parentId: "10101",
+          privilegeCode: "adduser",
+          privilegeId: "1010102",
+          privilegeLevel: 2,
+          privilegeName: "新增用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "viewuser",
+          parentId: "10101",
+          privilegeCode: "viewuser",
+          privilegeId: "1010101",
+          privilegeLevel: 2,
+          privilegeName: "查看用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "10101",
+          parentId: "101",
+          privilegeCode: "usermgmt",
+          privilegeId: "10101",
+          privilegeLevel: 2,
+          privilegeName: "用户管理",
           privilegeType: 1
         },
         {
-          objectId: "8010902",
-          parentId: "80109",
-          privilegeCode: "irs8010902",
-          privilegeId: "8010902",
+          objectId: "101",
+          parentId: "-1",
+          privilegeCode: "sysmgmt",
+          privilegeId: "101",
           privilegeLevel: 2,
-          privilegeName: "API配置",
+          privilegeName: "系统管理",
           privilegeType: 1
         },
         {
-          objectId: "8010901",
-          parentId: "80109",
-          privilegeCode: "irs8010901",
-          privilegeId: "8010901",
-          privilegeLevel: 2,
-          privilegeName: "规则配置",
-          privilegeType: 1
+          objectId: "delpool",
+          parentId: "8010401",
+          privilegeCode: "delpool",
+          privilegeId: "801040105",
+          privilegeLevel: 3,
+          privilegeName: "删除片池",
+          privilegeType: 2
         },
         {
-          objectId: "8010801",
-          parentId: "80108",
-          privilegeCode: "irs8010801",
-          privilegeId: "8010801",
-          privilegeLevel: 2,
-          privilegeName: "终端标签库",
-          privilegeType: 1
+          objectId: "exportpool",
+          parentId: "8010401",
+          privilegeCode: "exportpool",
+          privilegeId: "801040104",
+          privilegeLevel: 3,
+          privilegeName: "导出片池",
+          privilegeType: 2
         },
         {
-          objectId: "8010701",
-          parentId: "80107",
-          privilegeCode: "irs8010701",
-          privilegeId: "8010701",
-          privilegeLevel: 2,
-          privilegeName: "AB测试",
-          privilegeType: 1
+          objectId: "updatepool",
+          parentId: "8010401",
+          privilegeCode: "updatepool",
+          privilegeId: "801040103",
+          privilegeLevel: 3,
+          privilegeName: "修改片池",
+          privilegeType: 2
         },
         {
-          objectId: "8010601",
-          parentId: "80106",
-          privilegeCode: "irs8010601",
-          privilegeId: "8010601",
-          privilegeLevel: 2,
-          privilegeName: "场景管理",
-          privilegeType: 1
+          objectId: "addpool",
+          parentId: "8010401",
+          privilegeCode: "addpool",
+          privilegeId: "801040102",
+          privilegeLevel: 3,
+          privilegeName: "新增片池",
+          privilegeType: 2
         },
         {
-          objectId: "8010501",
-          parentId: "80105",
-          privilegeCode: "irs8010501",
-          privilegeId: "8010501",
-          privilegeLevel: 2,
-          privilegeName: "算法管理",
-          privilegeType: 1
+          objectId: "qrypool",
+          parentId: "8010401",
+          privilegeCode: "qrypool",
+          privilegeId: "801040101",
+          privilegeLevel: 3,
+          privilegeName: "查询片池",
+          privilegeType: 2
+        },
+        {
+          objectId: "delusergroup",
+          parentId: "8010301",
+          privilegeCode: "delusergroup",
+          privilegeId: "801030104",
+          privilegeLevel: 3,
+          privilegeName: "删除用户群",
+          privilegeType: 2
         },
         {
           objectId: "8010401",
@@ -919,6 +912,42 @@ export default {
           privilegeType: 1
         },
         {
+          objectId: "exportusergroup",
+          parentId: "8010301",
+          privilegeCode: "exportusergroup",
+          privilegeId: "801030105",
+          privilegeLevel: 3,
+          privilegeName: "导出用户群",
+          privilegeType: 2
+        },
+        {
+          objectId: "10000003",
+          parentId: "701",
+          privilegeCode: "modnoticeread",
+          privilegeId: "10000003",
+          privilegeLevel: 3,
+          privilegeName: "修改公告状态",
+          privilegeType: 2
+        },
+        {
+          objectId: "updateusergroup",
+          parentId: "8010301",
+          privilegeCode: "updateusergroup",
+          privilegeId: "801030103",
+          privilegeLevel: 3,
+          privilegeName: "修改用户群",
+          privilegeType: 2
+        },
+        {
+          objectId: "qryusergroup",
+          parentId: "8010301",
+          privilegeCode: "qryusergroup",
+          privilegeId: "801030101",
+          privilegeLevel: 3,
+          privilegeName: "查询用户群",
+          privilegeType: 2
+        },
+        {
           objectId: "8010301",
           parentId: "80103",
           privilegeCode: "irs8010301",
@@ -926,6 +955,42 @@ export default {
           privilegeLevel: 2,
           privilegeName: "用户群管理",
           privilegeType: 1
+        },
+        {
+          objectId: "addrule",
+          parentId: "8010201",
+          privilegeCode: "addrule",
+          privilegeId: "801020104",
+          privilegeLevel: 3,
+          privilegeName: "新增规则",
+          privilegeType: 2
+        },
+        {
+          objectId: "delrule",
+          parentId: "8010201",
+          privilegeCode: "delrule",
+          privilegeId: "801020103",
+          privilegeLevel: 3,
+          privilegeName: "删除规则",
+          privilegeType: 2
+        },
+        {
+          objectId: "updaterule",
+          parentId: "8010201",
+          privilegeCode: "updaterule",
+          privilegeId: "801020102",
+          privilegeLevel: 3,
+          privilegeName: "编辑规则",
+          privilegeType: 2
+        },
+        {
+          objectId: "qryrule",
+          parentId: "8010201",
+          privilegeCode: "qryrule",
+          privilegeId: "801020101",
+          privilegeLevel: 3,
+          privilegeName: "查询规则",
+          privilegeType: 2
         },
         {
           objectId: "8010201",
@@ -937,21 +1002,39 @@ export default {
           privilegeType: 1
         },
         {
+          objectId: "qryquotainfo",
+          parentId: "8010101",
+          privilegeCode: "qryquotainfo",
+          privilegeId: "801010102",
+          privilegeLevel: 3,
+          privilegeName: "查询看板指标信息",
+          privilegeType: 2
+        },
+        {
+          objectId: "qryscenebyuser",
+          parentId: "8010101",
+          privilegeCode: "qryscenebyuser",
+          privilegeId: "801010101",
+          privilegeLevel: 3,
+          privilegeName: "查询用户对应的场景",
+          privilegeType: 2
+        },
+        {
+          objectId: "8010101",
+          parentId: "80101",
+          privilegeCode: "irs8010101",
+          privilegeId: "8010101",
+          privilegeLevel: 2,
+          privilegeName: "看板",
+          privilegeType: 1
+        },
+        {
           objectId: "80109",
           parentId: "801",
           privilegeCode: "irs80109",
           privilegeId: "80109",
           privilegeLevel: 2,
           privilegeName: "系统设置",
-          privilegeType: 1
-        },
-        {
-          objectId: "80108",
-          parentId: "801",
-          privilegeCode: "irs80108",
-          privilegeId: "80108",
-          privilegeLevel: 2,
-          privilegeName: "终端标签库",
           privilegeType: 1
         },
         {
@@ -1018,6 +1101,114 @@ export default {
           privilegeType: 1
         },
         {
+          objectId: "701012",
+          parentId: "701",
+          privilegeCode: "comp_prodsubsusers",
+          privilegeId: "701012",
+          privilegeLevel: 3,
+          privilegeName: "分产品订购用户数",
+          privilegeType: 2
+        },
+        {
+          objectId: "701011",
+          parentId: "701",
+          privilegeCode: "comp_unsubusers",
+          privilegeId: "701011",
+          privilegeLevel: 3,
+          privilegeName: "主动退订用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701010",
+          parentId: "701",
+          privilegeCode: "comp_newpayusers",
+          privilegeId: "701010",
+          privilegeLevel: 3,
+          privilegeName: "新增订购用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701009",
+          parentId: "701",
+          privilegeCode: "comp_payusers",
+          privilegeId: "701009",
+          privilegeLevel: 3,
+          privilegeName: "付费用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701008",
+          parentId: "701",
+          privilegeCode: "comp_activiuser",
+          privilegeId: "701008",
+          privilegeLevel: 3,
+          privilegeName: "活跃用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701007",
+          parentId: "701",
+          privilegeCode: "comp_opentvuser",
+          privilegeId: "701007",
+          privilegeLevel: 3,
+          privilegeName: "开机用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701006",
+          parentId: "701",
+          privilegeCode: "comp_newreactiviuser",
+          privilegeId: "701006",
+          privilegeLevel: 3,
+          privilegeName: "新增激活用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701005",
+          parentId: "701",
+          privilegeCode: "comp_reactiviuser",
+          privilegeId: "701005",
+          privilegeLevel: 3,
+          privilegeName: "激活用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701004",
+          parentId: "701",
+          privilegeCode: "comp_newiptvuser",
+          privilegeId: "701004",
+          privilegeLevel: 3,
+          privilegeName: "新增视频用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701003",
+          parentId: "701",
+          privilegeCode: "comp_registuser",
+          privilegeId: "701003",
+          privilegeLevel: 3,
+          privilegeName: "视频注册用户",
+          privilegeType: 2
+        },
+        {
+          objectId: "701002",
+          parentId: "701",
+          privilegeCode: "comp_contentres",
+          privilegeId: "701002",
+          privilegeLevel: 3,
+          privilegeName: "内容资产",
+          privilegeType: 2
+        },
+        {
+          objectId: "701001",
+          parentId: "701",
+          privilegeCode: "comp_vodplaytop10",
+          privilegeId: "701001",
+          privilegeLevel: 3,
+          privilegeName: "热播TOP10",
+          privilegeType: 2
+        },
+        {
           objectId: "10000006",
           parentId: "10101",
           privilegeCode: "delnotice",
@@ -1045,47 +1236,252 @@ export default {
           privilegeType: 2
         },
         {
-          objectId: "10000003",
-          parentId: "701",
-          privilegeCode: "modnoticeread",
-          privilegeId: "10000003",
+          objectId: "8010501",
+          parentId: "80105",
+          privilegeCode: "irs8010501",
+          privilegeId: "8010501",
+          privilegeLevel: 2,
+          privilegeName: "算法管理",
+          privilegeType: 1
+        },
+        {
+          objectId: "qryalgorithm",
+          parentId: "8010501",
+          privilegeCode: "qryalgorithm",
+          privilegeId: "801050101",
           privilegeLevel: 3,
-          privilegeName: "修改公告状态",
+          privilegeName: "查询算法列表",
+          privilegeType: 2
+        },
+        {
+          objectId: "addalgorith",
+          parentId: "8010501",
+          privilegeCode: "addalgorith",
+          privilegeId: "801050102",
+          privilegeLevel: 3,
+          privilegeName: "新增算法",
+          privilegeType: 2
+        },
+        {
+          objectId: "updatealgorithm",
+          parentId: "8010501",
+          privilegeCode: "updatealgorithm",
+          privilegeId: "801050103",
+          privilegeLevel: 3,
+          privilegeName: "修改算法",
+          privilegeType: 2
+        },
+        {
+          objectId: "delalgorithm",
+          parentId: "8010501",
+          privilegeCode: "delalgorithm",
+          privilegeId: "801050104",
+          privilegeLevel: 3,
+          privilegeName: "删除算法",
+          privilegeType: 2
+        },
+        {
+          objectId: "8010601",
+          parentId: "80106",
+          privilegeCode: "irs8010601",
+          privilegeId: "8010601",
+          privilegeLevel: 2,
+          privilegeName: "场景管理",
+          privilegeType: 1
+        },
+        {
+          objectId: "qryscene",
+          parentId: "8010601",
+          privilegeCode: "qryscene",
+          privilegeId: "801060101",
+          privilegeLevel: 3,
+          privilegeName: "查询场景列表",
+          privilegeType: 2
+        },
+        {
+          objectId: "addscene",
+          parentId: "8010601",
+          privilegeCode: "addscene",
+          privilegeId: "801060102",
+          privilegeLevel: 3,
+          privilegeName: "新增场景",
+          privilegeType: 2
+        },
+        {
+          objectId: "delscene",
+          parentId: "8010601",
+          privilegeCode: "delscene",
+          privilegeId: "801060103",
+          privilegeLevel: 3,
+          privilegeName: "删除场景",
+          privilegeType: 2
+        },
+        {
+          objectId: "updatescene",
+          parentId: "8010601",
+          privilegeCode: "updatescene",
+          privilegeId: "801060104",
+          privilegeLevel: 3,
+          privilegeName: "修改场景",
+          privilegeType: 2
+        },
+        {
+          objectId: "8010701",
+          parentId: "80107",
+          privilegeCode: "irs8010701",
+          privilegeId: "8010701",
+          privilegeLevel: 2,
+          privilegeName: "AB测试",
+          privilegeType: 1
+        },
+        {
+          objectId: "qryabtestinfo",
+          parentId: "8010701",
+          privilegeCode: "qryabtestinfo",
+          privilegeId: "801070101",
+          privilegeLevel: 3,
+          privilegeName: "查询ab测试信息",
+          privilegeType: 2
+        },
+        {
+          objectId: "8010901",
+          parentId: "80109",
+          privilegeCode: "irs8010901",
+          privilegeId: "8010901",
+          privilegeLevel: 2,
+          privilegeName: "规则配置",
+          privilegeType: 1
+        },
+        {
+          objectId: "sysmanage",
+          parentId: "8010901",
+          privilegeCode: "sysmanage",
+          privilegeId: "801090101",
+          privilegeLevel: 3,
+          privilegeName: "修改配置",
+          privilegeType: 2
+        },
+        {
+          objectId: "8010902",
+          parentId: "80109",
+          privilegeCode: "irs8010902",
+          privilegeId: "8010902",
+          privilegeLevel: 2,
+          privilegeName: "API配置",
+          privilegeType: 1
+        },
+        {
+          objectId: "8010903",
+          parentId: "80109",
+          privilegeCode: "irs8010903",
+          privilegeId: "8010903",
+          privilegeLevel: 2,
+          privilegeName: "用户测试",
+          privilegeType: 1
+        },
+        {
+          objectId: "8010904",
+          parentId: "80109",
+          privilegeCode: "irs8010904",
+          privilegeId: "8010904",
+          privilegeLevel: 2,
+          privilegeName: "系统监控",
+          privilegeType: 1
+        },
+        {
+          objectId: "addusergroup",
+          parentId: "8010301",
+          privilegeCode: "addusergroup",
+          privilegeId: "801030102",
+          privilegeLevel: 3,
+          privilegeName: "新增用户群",
           privilegeType: 2
         }
       ];
-    //   let arrA = [];
-    //   data.forEach((item, index) => {
-    //     if (item.parentId === "-1") {
-    //       arrA.push(item);
-    //       arrA.forEach((aItem, aIndex) => {
-    //         let arrB = [];
-    //         data.forEach((bItem, bIndex) => {
-    //           if (aItem.objectId === bItem.parentId) {
-    //             arrB.push(bItem);
-    //             arrB.forEach((bItem, bIndex) => {
-    //               let arrC = [];
-    //               data.forEach((cItem, cIndex) => {
-    //                 if (bItem.objectId === cItem.parentId) {
-    //                   arrC.push(cItem);
-    //                 }
-    //               });
-    //               bItem.children = arrC;
-    //             });
-    //           }
-    //         });
-    //         aItem.children = arrB;
-    //       });
-    //     }
-    //   });
-      let arrA = data.filter(r => r.parentId === "-1");
-      arrA.forEach(r => {
-        r.children = data.filter(rr => rr.parentId === r.objectId);
-      });
-      console.log(arrA);
-      this.rightsList = arrA;
-    },
+      // let arrA = [];
+      // data.forEach((item, index) => {
+      //   if (item.parentId === "-1") {
+      //     arrA.push(item);
+      //     arrA.forEach((aItem, aIndex) => {
+      //       let arrB = [];
+      //       data.forEach((bItem, bIndex) => {
+      //         if (aItem.objectId === bItem.parentId) {
+      //           arrB.push(bItem);
+      //           arrB.forEach((bItem, bIndex) => {
+      //             let arrC = [];
+      //             data.forEach((cItem, cIndex) => {
+      //               if (bItem.objectId === cItem.parentId) {
+      //                 arrC.push(cItem);
+      //                 arrC.forEach((bItem, bIndex) => {
+      //                   let arrD = [];
+      //                   data.forEach((dItem, dIndex) => {
+      //                     if (cItem.objectId === dItem.parentId) {
+      //                       arrD.push(dItem);
+      //                     }
+      //                   });
+      //                   cItem.children = arrD;
+      //                 });
+      //               }
+      //             });
+      //             bItem.children = arrC;
+      //           });
+      //         }
+      //       });
+      //       aItem.children = arrB;
+      //     });
+      //   }
+      // });
 
+      // let arrA = data.filter(r => r.parentId === "-1");
+      // arrA.forEach(r => {
+      //   r.children = data.filter(rr => rr.parentId === r.objectId);
+      // });
+      let arrTree = parent => {
+        let newArr = [];
+        data.forEach(item => {
+          if (item.parentId === parent) {
+            item.children = arrTree(item.objectId);
+            newArr.push(item);
+          }
+        });
+        return newArr;
+      };
+      console.log(arrTree("-1"), "ajax");
+      this.rightsList = arrTree("-1");
+      //lau 始+++++++++++++++++++++++++++++++++++
+      // const myMenuCode = [
+      //   "modnoticeread",
+      //   "docworkbench",
+      //   "irs8010902",
+      //   "delnotice"
+      // ];
+      // const filterMenu = (arrA, menuCode) => {
+      //   return arrA
+      //     .filter(item => {
+      //       return menuCode.indexOf(item.privilegeCode) > -1;
+      //     })
+      //     .map(item => {
+      //       item = Object.assign({}, item);
+      //       if (item.children) {
+      //         item.children = filterMenu(item.children, menuCode);
+      //       }
+      //       return item;
+      //     });
+      // };
+      // const myMenu = filterMenu(arrA, myMenuCode);
+      // this.rightsList = myMenu;
+      // console.log(myMenu, "奎因123");
+    },
+    save(){
+      const pvgList = this.$refs.tree.getHalfCheckedKeys();
+      console.log(pvgList, "贾克斯");
+    },
+    checkboxSelect(data,status){
+      this.allIdArr = status.checkedKeys.concat(status.halfCheckedKeys)
+      console.log(this.allIdArr.length,'奎因');
+      console.log(status,'宋江');
+      console.log(status.halfCheckedKeys,'吴用');
+    }
   }
 };
 </script>
